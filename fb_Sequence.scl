@@ -1,0 +1,313 @@
+﻿TYPE "fb_Sequence_Param"
+VERSION : 0.1
+   STRUCT
+      Delay_01 : Time;
+      Delay_02 : Time;
+      Delay_03 : Time;
+      Delay_04 : Time;
+      Delay_05 : Time;
+      Delay_06 : Time;
+      Delay_07 : Time;
+      Delay_08 : Time;
+      MaxSequenceTime : Time;
+   END_STRUCT;
+
+END_TYPE
+
+TYPE "fb_Sequence_Cmd"
+VERSION : 0.1
+   STRUCT
+      Start : Bool;
+      Stop : Bool;
+      Pause : Bool;
+   END_STRUCT;
+
+END_TYPE
+
+TYPE "fb_Sequence_Sts"
+VERSION : 0.1
+   STRUCT
+      Idle : Bool;
+      Running : Bool;
+      Paused : Bool;
+      Stopped : Bool;
+   END_STRUCT;
+
+END_TYPE
+
+TYPE "fb_Sequence_HMI"
+VERSION : 0.1
+   STRUCT
+      rpt_SequenceTime : Time;
+      rpt_CurrentStep : DInt;
+      cmd_Run : Bool;
+   END_STRUCT;
+
+END_TYPE
+
+FUNCTION_BLOCK "fb_Sequence_V3"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      inp_Cond_01 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+      inp_Cond_02 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+      inp_Cond_03 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+      inp_Cond_04 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+      inp_Cond_05 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+      inp_Cond_06 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+      inp_Cond_07 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+      inp_Cond_08 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+      inp_RunPerms { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+      inp_StartPerms { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+   END_VAR
+   VAR_INPUT RETAIN
+      Param : "fb_Sequence_Param";
+   END_VAR
+   VAR_INPUT 
+      Cmd : "fb_Sequence_Cmd";
+   END_VAR
+
+   VAR_OUTPUT 
+      out_Action_01 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+      out_Action_02 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+      out_Action_03 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+      out_Action_04 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+      out_Action_05 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+      out_Action_06 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+      out_Action_07 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+      out_Action_08 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+      Sts { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : "fb_Sequence_Sts";
+      HMI : "fb_Sequence_HMI";
+   END_VAR
+
+   VAR 
+      _Step { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : DInt;
+      _tmr_TotalTimer {OriginalPartName := 'IEC_TIMER'; LibVersion := '1.0'; ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : TON_TIME;
+      _tmr_CycleWatchdog {OriginalPartName := 'IEC_TIMER'; LibVersion := '1.0'; ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : TON_TIME;
+      _tmr_StepDelay {OriginalPartName := 'IEC_TIMER'; LibVersion := '1.0'; ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : TON_TIME;
+      _RE_CmdStart { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+      _RE_cmdPause { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+      _StepMem { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : DInt;
+      _CountAction { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : DInt;
+      _ActionArray { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Array[0..30] of Bool;
+      _StepDelay_Enable { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+      _StepDelay_Preset { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Time;
+      _CycleEnabled : Bool;
+   END_VAR
+
+
+BEGIN
+	//Watchdog timer for duration of a step
+	#_tmr_CycleWatchdog(IN := #Sts.Running,
+	                    PT := #Param.MaxSequenceTime);
+	
+	//Total sequence timer
+	#_tmr_TotalTimer(IN := #Sts.Running OR #Sts.Paused,
+	                 PT := T#60M);
+	
+	//Step delay timer
+	#_tmr_StepDelay(IN := #_StepDelay_Enable,
+	                PT := #_StepDelay_Preset);
+	
+	//Start command
+	IF #Cmd.Start THEN
+	    IF #Sts.Idle AND #inp_RunPerms AND NOT #_RE_CmdStart THEN
+	        #_CycleEnabled := TRUE;
+	        #_RE_CmdStart := 1;
+	    END_IF;
+	    
+	    //If paused resume operation with start command
+	    IF #Sts.Paused AND NOT #_RE_CmdStart THEN
+	        #_Step := ABS(#_Step);
+	        #_RE_CmdStart := 1;
+	    END_IF;
+	ELSE
+	    #_RE_CmdStart := 0;
+	END_IF;
+	
+	//Stop command
+	IF #Cmd.Stop THEN
+	    #_CycleEnabled := FALSE;
+	    #_StepDelay_Enable := 0;
+	END_IF;
+	
+	//Pause command
+	//If watchdog timer expires go to paused mode
+	IF #Cmd.Pause OR #_tmr_CycleWatchdog.Q THEN
+	    IF #Sts.Running AND NOT #_RE_cmdPause THEN
+	        #_StepMem := #_Step;
+	        #_Step := - #_Step;
+	        #_RE_cmdPause := 1;
+	    END_IF;
+	ELSE
+	    #_RE_cmdPause := 0;
+	END_IF;
+	
+	//If start permissions are missing go to stop
+	IF NOT #inp_StartPerms THEN
+	    #_CycleEnabled := FALSE;
+	    #_Step := 0;
+	END_IF;
+	
+	CASE #_Step OF
+	    0:  //Stopped
+	        IF #inp_StartPerms THEN
+	            #_Step := 5;
+	        END_IF;
+	        
+	    5:  //Idle
+	        IF #_CycleEnabled THEN
+	            #_Step := 10;
+	        END_IF;
+	        
+	    10:
+	        IF #inp_Cond_01 THEN //Running    
+	            #_StepDelay_Preset := #Param.Delay_01;
+	            #_StepDelay_Enable := 1;
+	            IF #_tmr_StepDelay.Q THEN
+	                #_Step := 20;
+	                #_StepDelay_Enable := 0;
+	            END_IF;
+	        END_IF;
+	        
+	    20:
+	        IF #inp_Cond_02 THEN
+	            #_StepDelay_Preset := #Param.Delay_02;
+	            #_StepDelay_Enable := 1;
+	            IF #_tmr_StepDelay.Q THEN
+	                #_Step := 30;
+	                #_StepDelay_Enable := 0;
+	            END_IF;
+	            
+	        END_IF;
+	        
+	    30:
+	        IF #inp_Cond_03 THEN
+	            #_StepDelay_Preset := #Param.Delay_03;
+	            #_StepDelay_Enable := 1;
+	            IF #_tmr_StepDelay.Q THEN
+	                #_Step := 40;
+	                #_StepDelay_Enable := 0;
+	            END_IF;
+	        END_IF;
+	        
+	    40:
+	        IF #inp_Cond_04 THEN
+	            #_StepDelay_Preset := #Param.Delay_04;
+	            #_StepDelay_Enable := 1;
+	            IF #_tmr_StepDelay.Q THEN
+	                #_Step := 50;
+	                #_StepDelay_Enable := 0;
+	            END_IF;
+	            
+	        END_IF;
+	        
+	    50:
+	        IF #inp_Cond_05 THEN
+	            #_StepDelay_Preset := #Param.Delay_05;
+	            #_StepDelay_Enable := 1;
+	            IF #_tmr_StepDelay.Q THEN
+	                #_Step := 60;
+	                #_StepDelay_Enable := 0;
+	            END_IF;
+	            
+	        END_IF;
+	        
+	    60:
+	        IF #inp_Cond_06 THEN
+	            #_StepDelay_Preset := #Param.Delay_06;
+	            #_StepDelay_Enable := 1;
+	            IF #_tmr_StepDelay.Q THEN
+	                #_Step := 70;
+	                #_StepDelay_Enable := 0;
+	            END_IF;
+	            
+	        END_IF;
+	        
+	    70:
+	        IF #inp_Cond_07 THEN
+	            #_StepDelay_Preset := #Param.Delay_07;
+	            #_StepDelay_Enable := 1;
+	            IF #_tmr_StepDelay.Q THEN
+	                #_Step := 80;
+	                #_StepDelay_Enable := 0;
+	            END_IF;
+	        END_IF;
+	        
+	    80:
+	        IF #inp_Cond_08 THEN
+	            #_StepDelay_Preset := #Param.Delay_08;
+	            #_StepDelay_Enable := 1;
+	            IF #_tmr_StepDelay.Q THEN
+	                #_Step := 0;
+	                #_StepDelay_Enable := 0;
+	                
+	                //Display sequence time
+	                #HMI.#rpt_SequenceTime := #_tmr_TotalTimer.ET;
+	            END_IF;
+	        END_IF;
+	        
+	        //ELSE //When paused the step number is negated
+	        
+	END_CASE;
+	
+	//Set correct action one at a time
+	//When paused still keep the current step number active
+	IF #Sts.Paused THEN
+	    FOR #_CountAction := 10 TO 80 BY 10 DO
+	        IF #_StepMem = #_CountAction THEN
+	            #_ActionArray[#_CountAction / 10] := 1;
+	        ELSE
+	            #_ActionArray[#_CountAction / 10] := 0;
+	        END_IF;
+	    END_FOR;
+	ELSE
+	    FOR #_CountAction := 10 TO 80 BY 10 DO
+	        IF #_Step = #_CountAction THEN
+	            #_ActionArray[#_CountAction / 10] := 1;
+	        ELSE
+	            #_ActionArray[#_CountAction / 10] := 0;
+	        END_IF;
+	    END_FOR;
+	END_IF;
+	
+	//Update actions according to array
+	#out_Action_01 := #_ActionArray[1];
+	#out_Action_02 := #_ActionArray[2];
+	#out_Action_03 := #_ActionArray[3];
+	#out_Action_04 := #_ActionArray[4];
+	#out_Action_05 := #_ActionArray[5];
+	#out_Action_06 := #_ActionArray[6];
+	#out_Action_07 := #_ActionArray[7];
+	#out_Action_08 := #_ActionArray[8];
+	
+	//Update status
+	IF #_Step = 0 THEN
+	    #Sts.Idle := 0;
+	    #Sts.Running := 0;
+	    #Sts.Paused := 0;
+	    #Sts.Stopped := 1;
+	ELSIF #_Step = 5 THEN
+	    #Sts.Idle := 1;
+	    #Sts.Running := 0;
+	    #Sts.Paused := 0;
+	    #Sts.Stopped := 0;
+	ELSIF #_Step < 0 THEN
+	    #Sts.Idle := 0;
+	    #Sts.Running := 0;
+	    #Sts.Paused := 1;
+	    #Sts.Stopped := 0;
+	ELSE
+	    #Sts.Idle := 0;
+	    #Sts.Running := 1;
+	    #Sts.Paused := 0;
+	    #Sts.Stopped := 0;
+	END_IF;
+	
+	//Send values to HMI
+	#HMI.rpt_CurrentStep := #_Step;
+	#HMI.rpt_SequenceTime := #_tmr_TotalTimer.ET;
+	
+	
+END_FUNCTION_BLOCK
+
