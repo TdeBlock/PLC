@@ -1,83 +1,89 @@
-﻿TYPE "fb_Sequence_Param"
-VERSION : 0.1
-   STRUCT
-      Delay_01 : Time;
-      Delay_02 : Time;
-      Delay_03 : Time;
-      Delay_04 : Time;
-      Delay_05 : Time;
-      Delay_06 : Time;
-      Delay_07 : Time;
-      Delay_08 : Time;
-      MaxSequenceTime : Time;
-   END_STRUCT;
-
-END_TYPE
-
-TYPE "fb_Sequence_Cmd"
-VERSION : 0.1
-   STRUCT
-      Start : Bool;
-      Stop : Bool;
-      Pause : Bool;
-   END_STRUCT;
-
-END_TYPE
-
-TYPE "fb_Sequence_Sts"
-VERSION : 0.1
-   STRUCT
-      Idle : Bool;
-      Running : Bool;
-      Paused : Bool;
-      Stopped : Bool;
-   END_STRUCT;
-
-END_TYPE
-
-TYPE "fb_Sequence_HMI"
+﻿TYPE "udtSequence_HMI"
 VERSION : 0.1
    STRUCT
       rpt_SequenceTime : Time;
+      cmd : Struct
+         Start : Bool;
+         Stop : Bool;
+         Pause : Bool;
+         Resume : Bool;
+      END_STRUCT;
       rpt_CurrentStep : DInt;
-      cmd_Run : Bool;
+      rpt : Struct
+         CurrentStep : Int;
+         SequenceTIme : Time;
+         State : Int;
+      END_STRUCT;
    END_STRUCT;
 
 END_TYPE
 
-FUNCTION_BLOCK "fb_Sequence_V3"
+FUNCTION_BLOCK "fb_Sequence"
 { S7_Optimized_Access := 'TRUE' }
 VERSION : 0.1
    VAR_INPUT 
-      inp_Cond_01 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
-      inp_Cond_02 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
-      inp_Cond_03 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
-      inp_Cond_04 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
-      inp_Cond_05 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
-      inp_Cond_06 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
-      inp_Cond_07 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
-      inp_Cond_08 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
-      inp_RunPerms { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
-      inp_StartPerms { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+      inCond_01 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Transition conditions for step 1
+      inCond_02 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Transition conditions for step 2
+      inCond_03 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Transition conditions for step 3
+      inCond_04 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Transition conditions for step 4
+      inCond_05 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Transition conditions for step 5
+      inCond_06 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Transition conditions for step 6
+      inCond_07 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Transition conditions for step 7
+      inCond_08 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Transition conditions for step 8
+      inRunPerms { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Run permissions
+      inStartPerms { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Start permissions
    END_VAR
    VAR_INPUT RETAIN
-      Param : "fb_Sequence_Param";
+      Params { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Struct
+         StepDelay_01 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Time;   // Delay after transition conditions are met
+         StepDisable_01 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Disable this step. Step will be skipped
+         StepDelay_02 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Time;   // Delay after transition conditions are met
+         StepDisable_02 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Disable this step. Step will be skipped
+         StepDelay_03 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Time;   // Delay after transition conditions are met
+         StepDisable_03 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Disable this step. Step will be skipped
+         StepDelay_04 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Time;   // Delay after transition conditions are met
+         StepDisable_04 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Disable this step. Step will be skipped
+         StepDelay_05 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Time;   // Delay after transition conditions are met
+         StepDisable_05 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Disable this step. Step will be skipped
+         StepDelay_06 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Time;   // Delay after transition conditions are met
+         StepDisable_06 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Disable this step. Step will be skipped
+         StepDelay_07 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Time;   // Delay after transition conditions are met
+         StepDisable_07 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Disable this step. Step will be skipped
+         StepDelay_08 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Time;   // Delay after transition conditions are met
+         StepDisable_08 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Disable this step. Step will be skipped
+         MaxStepTime { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Time;   // Sequence will go to paused state when this time is exceeded
+         RunContinuously { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Repeat cycle until stop command is given
+         StepCycle { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Wait in each step until the start command is given again
+      END_STRUCT;
    END_VAR
    VAR_INPUT 
-      Cmd : "fb_Sequence_Cmd";
+      Cmd { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Struct
+         Start { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Start running the sequence from state Idle
+         Stop { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Stop running and go to Idle state
+         Pause { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Continue the sequence from paused to running state
+         Restart { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Set the sequence to Paused state
+      END_STRUCT;
    END_VAR
 
    VAR_OUTPUT 
-      out_Action_01 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
-      out_Action_02 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
-      out_Action_03 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
-      out_Action_04 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
-      out_Action_05 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
-      out_Action_06 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
-      out_Action_07 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
-      out_Action_08 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
-      Sts { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : "fb_Sequence_Sts";
-      HMI : "fb_Sequence_HMI";
+      outAction_01 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Action for step 1
+      outAction_02 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Action for step 2
+      outAction_03 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Action for step 3
+      outAction_04 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Action for step 4
+      outAction_05 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Action for step 5
+      outAction_06 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Action for step 6
+      outAction_07 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Action for step 7
+      outAction_08 { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Action for step 8
+      Sts { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Struct
+         Idle { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Waiting for start command
+         Running { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Sequence in progress
+         Paused { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Sequence pause due to transition time-out or pause command
+         Stopped { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Waiting for run permissions before transitioning to idle
+      END_STRUCT;
+   END_VAR
+
+   VAR_IN_OUT 
+      HMI : "udtSequence_HMI";
    END_VAR
 
    VAR 
@@ -92,14 +98,14 @@ VERSION : 0.1
       _ActionArray { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Array[0..30] of Bool;
       _StepDelay_Enable { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
       _StepDelay_Preset { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Time;
-      _CycleEnabled : Bool;
+      _CycleEnabled { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
    END_VAR
 
 
 BEGIN
 	//Watchdog timer for duration of a step
 	#_tmr_CycleWatchdog(IN := #Sts.Running,
-	                    PT := #Param.MaxSequenceTime);
+	                    PT := #Params.MaxStepTime);
 	
 	//Total sequence timer
 	#_tmr_TotalTimer(IN := #Sts.Running OR #Sts.Paused,
@@ -111,7 +117,7 @@ BEGIN
 	
 	//Start command
 	IF #Cmd.Start THEN
-	    IF #Sts.Idle AND #inp_RunPerms AND NOT #_RE_CmdStart THEN
+	    IF #Sts.Idle AND #inRunPerms AND NOT #_RE_CmdStart THEN
 	        #_CycleEnabled := TRUE;
 	        #_RE_CmdStart := 1;
 	    END_IF;
@@ -144,14 +150,14 @@ BEGIN
 	END_IF;
 	
 	//If start permissions are missing go to stop
-	IF NOT #inp_StartPerms THEN
+	IF NOT #inStartPerms THEN
 	    #_CycleEnabled := FALSE;
 	    #_Step := 0;
 	END_IF;
 	
 	CASE #_Step OF
 	    0:  //Stopped
-	        IF #inp_StartPerms THEN
+	        IF #inStartPerms THEN
 	            #_Step := 5;
 	        END_IF;
 	        
@@ -161,8 +167,8 @@ BEGIN
 	        END_IF;
 	        
 	    10:
-	        IF #inp_Cond_01 THEN //Running    
-	            #_StepDelay_Preset := #Param.Delay_01;
+	        IF #inCond_01 THEN //Running    
+	            #_StepDelay_Preset := #Params.StepDelay_01;
 	            #_StepDelay_Enable := 1;
 	            IF #_tmr_StepDelay.Q THEN
 	                #_Step := 20;
@@ -171,8 +177,8 @@ BEGIN
 	        END_IF;
 	        
 	    20:
-	        IF #inp_Cond_02 THEN
-	            #_StepDelay_Preset := #Param.Delay_02;
+	        IF #inCond_02 THEN
+	            #_StepDelay_Preset := #Params.StepDelay_02;
 	            #_StepDelay_Enable := 1;
 	            IF #_tmr_StepDelay.Q THEN
 	                #_Step := 30;
@@ -182,8 +188,8 @@ BEGIN
 	        END_IF;
 	        
 	    30:
-	        IF #inp_Cond_03 THEN
-	            #_StepDelay_Preset := #Param.Delay_03;
+	        IF #inCond_03 THEN
+	            #_StepDelay_Preset := #Params.StepDelay_03;
 	            #_StepDelay_Enable := 1;
 	            IF #_tmr_StepDelay.Q THEN
 	                #_Step := 40;
@@ -192,8 +198,8 @@ BEGIN
 	        END_IF;
 	        
 	    40:
-	        IF #inp_Cond_04 THEN
-	            #_StepDelay_Preset := #Param.Delay_04;
+	        IF #inCond_04 THEN
+	            #_StepDelay_Preset := #Params.StepDelay_04;
 	            #_StepDelay_Enable := 1;
 	            IF #_tmr_StepDelay.Q THEN
 	                #_Step := 50;
@@ -203,8 +209,8 @@ BEGIN
 	        END_IF;
 	        
 	    50:
-	        IF #inp_Cond_05 THEN
-	            #_StepDelay_Preset := #Param.Delay_05;
+	        IF #inCond_05 THEN
+	            #_StepDelay_Preset := #Params.StepDelay_05;
 	            #_StepDelay_Enable := 1;
 	            IF #_tmr_StepDelay.Q THEN
 	                #_Step := 60;
@@ -214,8 +220,8 @@ BEGIN
 	        END_IF;
 	        
 	    60:
-	        IF #inp_Cond_06 THEN
-	            #_StepDelay_Preset := #Param.Delay_06;
+	        IF #inCond_06 THEN
+	            #_StepDelay_Preset := #Params.StepDelay_06;
 	            #_StepDelay_Enable := 1;
 	            IF #_tmr_StepDelay.Q THEN
 	                #_Step := 70;
@@ -225,8 +231,8 @@ BEGIN
 	        END_IF;
 	        
 	    70:
-	        IF #inp_Cond_07 THEN
-	            #_StepDelay_Preset := #Param.Delay_07;
+	        IF #inCond_07 THEN
+	            #_StepDelay_Preset := #Params.StepDelay_07;
 	            #_StepDelay_Enable := 1;
 	            IF #_tmr_StepDelay.Q THEN
 	                #_Step := 80;
@@ -235,8 +241,8 @@ BEGIN
 	        END_IF;
 	        
 	    80:
-	        IF #inp_Cond_08 THEN
-	            #_StepDelay_Preset := #Param.Delay_08;
+	        IF #inCond_08 THEN
+	            #_StepDelay_Preset := #Params.StepDelay_08;
 	            #_StepDelay_Enable := 1;
 	            IF #_tmr_StepDelay.Q THEN
 	                #_Step := 0;
@@ -272,14 +278,14 @@ BEGIN
 	END_IF;
 	
 	//Update actions according to array
-	#out_Action_01 := #_ActionArray[1];
-	#out_Action_02 := #_ActionArray[2];
-	#out_Action_03 := #_ActionArray[3];
-	#out_Action_04 := #_ActionArray[4];
-	#out_Action_05 := #_ActionArray[5];
-	#out_Action_06 := #_ActionArray[6];
-	#out_Action_07 := #_ActionArray[7];
-	#out_Action_08 := #_ActionArray[8];
+	#outAction_01 := #_ActionArray[1];
+	#outAction_02 := #_ActionArray[2];
+	#outAction_03 := #_ActionArray[3];
+	#outAction_04 := #_ActionArray[4];
+	#outAction_05 := #_ActionArray[5];
+	#outAction_06 := #_ActionArray[6];
+	#outAction_07 := #_ActionArray[7];
+	#outAction_08 := #_ActionArray[8];
 	
 	//Update status
 	IF #_Step = 0 THEN
