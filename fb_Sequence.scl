@@ -102,7 +102,7 @@ BEGIN
 	END_IF;
 	
 	//Stop command
-	IF #cmd.Stop THEN
+	IF #cmd.Stop OR (#sts.Running AND NOT #inpRunPerms) THEN //Go to stopping if run permissions are lost during running
 	    IF NOT #RE_CmdStop THEN
 	        #bStopping := TRUE;
 	        #RE_CmdStop := TRUE;
@@ -138,8 +138,11 @@ BEGIN
 	    5://Idle
 	        #bMaxStepTimeEnable := FALSE;
 	        IF #inpRunPerms AND #bStepPermission THEN
-	            #bStepDelayEnable := FALSE;
 	            #iStep := 10;
+	            #bStepDelayEnable := FALSE;
+	            IF #param.StepCycle THEN
+	                #bStepPermission := FALSE;
+	            END_IF;
 	        END_IF;
 	        
 	    10:
@@ -151,6 +154,9 @@ BEGIN
 	            IF #tmrStepDelay.Q THEN
 	                #iStep := 20;
 	                #bStepDelayEnable := FALSE;
+	                IF #param.StepCycle THEN
+	                    #bStepPermission := FALSE;
+	                END_IF;
 	            END_IF;
 	        ELSIF #param.StepDisable_01 THEN
 	            #bMaxStepTimeEnable := FALSE;
@@ -166,6 +172,9 @@ BEGIN
 	            IF #tmrStepDelay.Q THEN
 	                #iStep := 30;
 	                #bStepDelayEnable := FALSE;
+	                IF #param.StepCycle THEN
+	                    #bStepPermission := FALSE;
+	                END_IF;
 	            END_IF;
 	        ELSIF #param.StepDisable_02 THEN
 	            #bMaxStepTimeEnable := FALSE;
@@ -181,6 +190,9 @@ BEGIN
 	            IF #tmrStepDelay.Q THEN
 	                #iStep := 40;
 	                #bStepDelayEnable := FALSE;
+	                IF #param.StepCycle THEN
+	                    #bStepPermission := FALSE;
+	                END_IF;
 	            END_IF;
 	        ELSIF #param.StepDisable_03 THEN
 	            #bMaxStepTimeEnable := FALSE;
@@ -196,6 +208,9 @@ BEGIN
 	            IF #tmrStepDelay.Q THEN
 	                #iStep := 50;
 	                #bStepDelayEnable := FALSE;
+	                IF #param.StepCycle THEN
+	                    #bStepPermission := FALSE;
+	                END_IF;
 	            END_IF;
 	        ELSIF #param.StepDisable_04 THEN
 	            #bMaxStepTimeEnable := FALSE;
@@ -211,6 +226,9 @@ BEGIN
 	            IF #tmrStepDelay.Q THEN
 	                #iStep := 60;
 	                #bStepDelayEnable := FALSE;
+	                IF #param.StepCycle THEN
+	                    #bStepPermission := FALSE;
+	                END_IF;
 	            END_IF;
 	        ELSIF #param.StepDisable_05 THEN
 	            #bMaxStepTimeEnable := FALSE;
@@ -226,6 +244,9 @@ BEGIN
 	            IF #tmrStepDelay.Q THEN
 	                #iStep := 70;
 	                #bStepDelayEnable := FALSE;
+	                IF #param.StepCycle THEN
+	                    #bStepPermission := FALSE;
+	                END_IF;
 	            END_IF;
 	        ELSIF #param.StepDisable_06 THEN
 	            #bMaxStepTimeEnable := FALSE;
@@ -241,6 +262,9 @@ BEGIN
 	            IF #tmrStepDelay.Q THEN
 	                #iStep := 80;
 	                #bStepDelayEnable := FALSE;
+	                IF #param.StepCycle THEN
+	                    #bStepPermission := FALSE;
+	                END_IF;
 	            END_IF;
 	        ELSIF #param.StepDisable_07 THEN
 	            #bMaxStepTimeEnable := FALSE;
