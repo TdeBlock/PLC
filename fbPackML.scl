@@ -2,47 +2,75 @@
 { S7_Optimized_Access := 'TRUE' }
 VERSION : 0.1
    VAR_INPUT 
-      cmd : Struct
-         Start : Bool;   // The start command will move the unit into theStarting state.
-         Hold : Bool;   // The Hold command changes the unit from the EXECUTE state to the HOLDING state
-         UnHold : Bool;   // The Unhold command releases the HOLD state and moves the unit to the UNHOLDING state and then back to EXECUTE state
-         Suspend : Bool;   // A Suspend command may come as the result of upstream or downstream problems outside the unit itself
-         UnSuspend : Bool;   // The Unsuspend command releases the unit/machine from SUSPENDED state and moves to the UNSUSPENDING state and finally to the EXECUTE state
-         StateCompleted : Bool;   // The State Completed (SC) is an internal unit action which moves the unit itself to the next state. The SC is activated when the appropriate unit conditions are reached
-         Stop : Bool;   // The Stop command will start the execution of logic which brings the unit to the STOPPING state and finally to the STOPPED state
-         Reset : Bool;   // Initiate on the unit that is ready for production and move the unit/machine into the IDLE state via the RESETTING state
-         Abort : Bool;   // Will change the unit to the Aborting state and to the transitional state ABORTING and the secure state ABORTED
-         Clear : Bool;   //  Proceed to a CLEARING state and then the STOPPED state
+      cmd { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Struct
+         Start { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // The start command will move the unit into theStarting state.
+         Hold { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // The Hold command changes the unit from the EXECUTE state to the HOLDING state
+         UnHold { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // The Unhold command releases the HOLD state and moves the unit to the UNHOLDING state and then back to EXECUTE state
+         Suspend { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // A Suspend command may come as the result of upstream or downstream problems outside the unit itself
+         UnSuspend { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // The Unsuspend command releases the unit/machine from SUSPENDED state and moves to the UNSUSPENDING state and finally to the EXECUTE state
+         ExecuteCompleted { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Moves the unit from the EXECUTE state to the COMPLETING state and finally the COMPLETE state
+         StateCompleted { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // The State Completed (SC) is an internal unit action which moves the unit itself to the next state. The SC is activated when the appropriate unit conditions are reached
+         Stop { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // The Stop command will start the execution of logic which brings the unit to the STOPPING state and finally to the STOPPED state
+         Reset { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Initiate on the unit that is ready for production and move the unit/machine into the IDLE state via the RESETTING state
+         Abort { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Will change the unit to the Aborting state and to the transitional state ABORTING and the secure state ABORTED
+         Clear { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   //  Proceed to a CLEARING state and then the STOPPED state
       END_STRUCT;
-      param : Struct
-         placeholder : Bool;
+      param { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Struct
+         DisableStarting { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+         DisableHolding { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+         DisableUnHolding { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+         DisableSuspending { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+         DisableUnSuspending { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+         DisableCompleting { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+         DisableAborting { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+         DisableClearing { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+         DisableStopping { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+         DisableResetting { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
       END_STRUCT;
+      inpInit : Bool;
    END_VAR
 
    VAR_OUTPUT 
-      sts : Struct
-         Idle : Bool;   // Wait state: Unit ready awaiting start command
-         Starting : Bool;   // Acting state: Unit is starting up to go to Execute state
-         Execute : Bool;   // Acting state: Unit is producing
-         Holding : Bool;   // Acting state: Unit is stopping before going to held state
-         Held : Bool;   // Wait state: Represents an error state which will generate an alarm or warning
-         Unholding : Bool;   // Acting state: Unit is starting up to go to Execute state
-         Suspending : Bool;   // Acting state: Unit is stopping before going to suspended state
-         Suspended : Bool;   // Wait state: The unit is not producing
-         UnSuspending : Bool;   // Acting state: Unit is starting up to go to Execute state
-         Completing : Bool;   // Acting state: The unit is stopping before going to complete state
-         Complete : Bool;   // Wait state: Unit process is complete awaiting reset command
-         Stopping : Bool;   // Acting state: Unit is stopping before going to stopped state
-         Stopped : Bool;   // Wait state: Unit is stopped awaiting reset command
-         Aborting : Bool;   // Acting state: Unit is stopping before going to aborted state
-         Aborted : Bool;   // Wait state: Unit is stopped awaiting clear command
-         Clearing : Bool;   // Acting state:  Clear faults that may have occurred when ABORTING and were presented in the ABORTED state
-         Resetting : Bool;   // Acting state: Unit is resetting before going to idle state
+      sts { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Struct
+         Idle { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Wait state: Unit ready awaiting start command
+         Starting { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Acting state: Unit is starting up to go to Execute state
+         Execute { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Acting state: Unit is producing
+         Holding { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Acting state: Unit is stopping before going to held state
+         Held { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Wait state: Represents an error state which will generate an alarm or warning
+         Unholding { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Acting state: Unit is starting up to go to Execute state
+         Suspending { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Acting state: Unit is stopping before going to suspended state
+         Suspended { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Wait state: The unit is not producing
+         UnSuspending { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Acting state: Unit is starting up to go to Execute state
+         Completing { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Acting state: The unit is stopping before going to complete state
+         Complete { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Wait state: Unit process is complete awaiting reset command
+         Stopping { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Acting state: Unit is stopping before going to stopped state
+         Stopped { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Wait state: Unit is stopped awaiting reset command
+         Aborting { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Acting state: Unit is stopping before going to aborted state
+         Aborted { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Wait state: Unit is stopped awaiting clear command
+         Clearing { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Acting state:  Clear faults that may have occurred when ABORTING and were presented in the ABORTED state
+         Resetting { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Acting state: Unit is resetting before going to idle state
       END_STRUCT;
    END_VAR
 
    VAR 
-      iState : Bool;
+      iState { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Int;   // Current state
+      RE { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Struct   // Rising edges for commands
+         CmdStart { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+         CmdHold { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+         CmdUnHold { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+         CmdSuspend { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+         CmdUnSuspend { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+         CmdExecuteCompleted { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+         CmdStateCompleted { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+         CmdStop { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+         CmdReset { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+         CmdAbort { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+         CmdClear { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+      END_STRUCT;
+   END_VAR
+
+   VAR_TEMP 
+      iInitialState : Int;
    END_VAR
 
    VAR CONSTANT 
@@ -68,20 +96,236 @@ VERSION : 0.1
 
 BEGIN
 	// This function block is responsible for handling the PackML states
+	//
+	
+	//Instances and variable initialization
+	REGION "Initialization"
+	    IF #inpInit THEN
+	        #iInitialState := #iStateStopped;
+	        #iState := #iInitialState;
+	    END_IF;
+	END_REGION
 	
 	//Handling of external commands
 	REGION "Commands"
+	    //Start command
+	    IF #cmd.Start THEN
+	        IF NOT #RE.CmdStart THEN
+	            #RE.CmdStart := TRUE;
+	        END_IF;
+	    ELSE
+	        #RE.CmdStart := FALSE;
+	    END_IF;
 	    
+	    //Hold command
+	    IF #cmd.Hold THEN
+	        IF NOT #RE.CmdHold THEN
+	            #RE.CmdHold := TRUE;
+	        END_IF;
+	    ELSE
+	        #RE.CmdHold := FALSE;
+	    END_IF;
+	    
+	    //Unhold command
+	    IF #cmd.UnHold THEN
+	        IF NOT #RE.CmdUnHold THEN
+	            #RE.CmdUnHold := TRUE;
+	        END_IF;
+	    ELSE
+	        #RE.CmdUnHold := FALSE;
+	    END_IF;
+	    
+	    //Suspend command
+	    IF #cmd.Suspend THEN
+	        IF NOT #RE.CmdSuspend THEN
+	            #RE.CmdSuspend := TRUE;
+	        END_IF;
+	    ELSE
+	        #RE.CmdSuspend := FALSE;
+	    END_IF;
+	    
+	    //Unsuspend command
+	    IF #cmd.UnSuspend THEN
+	        IF NOT #RE.CmdUnSuspend THEN
+	            #RE.CmdUnSuspend := TRUE;
+	        END_IF;
+	    ELSE
+	        #RE.CmdUnSuspend := FALSE;
+	    END_IF;
+	    
+	    //Execute complete command
+	    IF #cmd.ExecuteCompleted THEN
+	        IF NOT #RE.CmdExecuteCompleted THEN
+	            #RE.CmdExecuteCompleted := TRUE;
+	        END_IF;
+	    ELSE
+	        #RE.CmdExecuteCompleted := FALSE;
+	    END_IF;
+	    
+	    //State complete command
+	    IF #cmd.StateCompleted THEN
+	        IF NOT #RE.CmdStateCompleted THEN
+	            #RE.CmdStateCompleted := TRUE;
+	        END_IF;
+	    ELSE
+	        #RE.CmdStateCompleted := FALSE;
+	    END_IF;
+	    
+	    //Stop command
+	    IF #cmd.Stop THEN
+	        IF NOT #RE.CmdStop THEN
+	            #RE.CmdStop := TRUE;
+	            IF NOT (#sts.Aborted OR #sts.Aborting OR #sts.Clearing OR #sts.Stopped) THEN
+	                #iState := #iStateStopping;
+	            END_IF;
+	        END_IF;
+	    ELSE
+	        #RE.CmdStop := FALSE;
+	    END_IF;
+	    
+	    //Reset command
+	    IF #cmd.Reset THEN
+	        IF NOT #RE.CmdReset THEN
+	            #RE.CmdReset := TRUE;
+	        END_IF;
+	    ELSE
+	        #RE.CmdReset := FALSE;
+	    END_IF;
+	    
+	    //Abort command
+	    IF #cmd.Abort THEN
+	        IF NOT #RE.CmdAbort THEN
+	            #RE.CmdAbort := TRUE;
+	            #iState := #iStateAborting;
+	        END_IF;
+	    ELSE
+	        #RE.CmdAbort := FALSE;
+	    END_IF;
+	    
+	    //Clear command
+	    IF #cmd.Clear THEN
+	        IF NOT #RE.CmdClear THEN
+	            #RE.CmdClear := TRUE;
+	        END_IF;
+	    ELSE
+	        #RE.CmdClear := FALSE;
+	    END_IF;
 	END_REGION
 	
 	//States and transitions
 	REGION "States"
+	    CASE #iState OF
+	        #iStateClearing:    //Clearing state
+	            IF #RE.CmdStateCompleted OR #param.DisableClearing THEN
+	                #iState := #iStateStopped;
+	            END_IF;
+	            
+	        #iStateStopped:     //Stopped state
+	            IF #RE.CmdReset THEN
+	                #iState := #iStateResetting;
+	            END_IF;
+	            
+	        #iStateResetting:   //Resetting state
+	            IF #RE.CmdStateCompleted OR #param.DisableResetting THEN
+	                #iState := #iStateIdle;
+	            END_IF;
+	            
+	        #iStateIdle:  // Idle state
+	            IF #RE.CmdStart THEN
+	                #iState := #iStateStarting;
+	            END_IF;
+	            
+	        #iStateStarting:  // Starting state
+	            IF #RE.CmdStateCompleted OR #param.DisableStarting THEN
+	                #iState := #iStateExecute;
+	            END_IF;
+	            
+	        #iStateExecute: //Execute state
+	            IF #RE.CmdHold THEN
+	                #iState := #iStateHolding;
+	            ELSIF #RE.CmdSuspend THEN
+	                #iState := #iStateSuspending;
+	            ELSIF #RE.CmdExecuteCompleted THEN
+	                #iState := #iStateCompleting;
+	            END_IF;
+	            
+	        #iStateHolding: //Holding state
+	            IF #RE.CmdStateCompleted OR #param.DisableHolding THEN
+	                #iState := #iStateHeld;
+	            END_IF;
+	            
+	        #iStateHeld:    //Held state
+	            IF #RE.CmdUnHold THEN
+	                #iState := #iStateUnholding;
+	            END_IF;
+	            
+	        #iStateUnholding:   //Unholding state
+	            IF #RE.CmdStateCompleted OR #param.DisableUnHolding THEN
+	                #iState := #iStateExecute;
+	            END_IF;
+	            
+	        #iStateSuspending:  //Suspending state
+	            IF #RE.CmdStateCompleted OR #param.DisableSuspending THEN
+	                #iState := #iStateSuspended;
+	            END_IF;
+	            
+	        #iStateSuspended:   //Suspended state
+	            IF #RE.CmdUnSuspend THEN
+	                #iState := #iStateUnsuspending;
+	            END_IF;
+	            
+	        #iStateUnsuspending:    //Unsuspending state
+	            IF #RE.CmdStateCompleted OR #param.DisableUnSuspending THEN
+	                #iState := #iStateExecute;
+	            END_IF;
+	            
+	        #iStateCompleting:  //Completing state
+	            IF #RE.CmdStateCompleted OR #param.DisableCompleting THEN
+	                #iState := #iStateComplete;
+	            END_IF;
+	            
+	        #iStateComplete:    //Completed state
+	            IF #RE.CmdReset THEN
+	                #iState := #iStateResetting;
+	            END_IF;
+	            
+	            #iStateStopping:    //Stopping state
+	                IF #RE.CmdStateCompleted OR #param.DisableStopping THEN
+	                #iState := #iStateStopped;
+	            END_IF;
+	            
+	        #iStateAborting:    //Aborting state
+	            IF #RE.CmdStateCompleted OR #param.DisableAborting THEN
+	                #iState := #iStateAborted;
+	            END_IF;
+	            
+	        #iStateAborted:     //Aborted state
+	            IF #RE.CmdClear THEN
+	                #iState := #iStateClearing;
+	            END_IF;
+	    END_CASE;
 	    
 	END_REGION
 	
-	//Reflection of status
+	//Reflection of internal status to interface
 	REGION "Status"
-	    
+	    #sts.Aborted := (#iState = #iStateAborted);
+	    #sts.Aborting := (#iState = #iStateAborting);
+	    #sts.Clearing := (#iState = #iStateClearing);
+	    #sts.Complete := (#iState = #iStateComplete);
+	    #sts.Completing := (#iState = #iStateCompleting);
+	    #sts.Execute := (#iState = #iStateExecute);
+	    #sts.Held := (#iState = #iStateHeld);
+	    #sts.Holding := (#iState = #iStateHolding);
+	    #sts.Idle := (#iState = #iStateIdle);
+	    #sts.Resetting := (#iState = #iStateResetting);
+	    #sts.Starting := (#iState = #iStateStarting);
+	    #sts.Stopped := (#iState = #iStateStopped);
+	    #sts.Stopping := (#iState = #iStateStopping);
+	    #sts.Suspended := (#iState = #iStateSuspended);
+	    #sts.Suspending := (#iState = #iStateSuspending);
+	    #sts.Unholding := (#iState = #iStateUnholding);
+	    #sts.UnSuspending := (#iState = #iStateUnsuspending);
 	END_REGION
 END_FUNCTION_BLOCK
 
