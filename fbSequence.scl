@@ -1,0 +1,358 @@
+﻿FUNCTION_BLOCK "fbSequence_V6"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      inpCond_01 { ExternalWritable := 'False'} : Bool;   // Transition conditions for step 1
+      inpCond_02 { ExternalWritable := 'False'} : Bool;   // Transition conditions for step 2
+      inpCond_03 { ExternalWritable := 'False'} : Bool;   // Transition conditions for step 3
+      inpCond_04 { ExternalWritable := 'False'} : Bool;   // Transition conditions for step 4
+      inpCond_05 { ExternalWritable := 'False'} : Bool;   // Transition conditions for step 5
+      inpCond_06 { ExternalWritable := 'False'} : Bool;   // Transition conditions for step 6
+      inpCond_07 { ExternalWritable := 'False'} : Bool;   // Transition conditions for step 7
+      inpCond_08 { ExternalWritable := 'False'} : Bool;   // Transition conditions for step 8
+      inpRunPerms : Bool;   // Run permissions - transition from idle to running
+      inpStartPerms : Bool;   // Start permissions - transition from stop to idle
+      cmd : Struct
+         Start : Bool;   // Start running the sequence from state Idle
+         Stop : Bool;   // Stop running and go to Idle state
+         Pause : Bool;   // Set the sequence to Paused state
+      END_STRUCT;
+      param : Struct
+         StepDelay_01 : Time;   // Delay after transition conditions are met
+         StepDisable_01 : Bool;   // Disable this step. Step will be skipped
+         StepDelay_02 : Time;   // Delay after transition conditions are met
+         StepDisable_02 : Bool;   // Disable this step. Step will be skipped
+         StepDelay_03 : Time;   // Delay after transition conditions are met
+         StepDisable_03 : Bool;   // Disable this step. Step will be skipped
+         StepDelay_04 : Time;   // Delay after transition conditions are met
+         StepDisable_04 : Bool;   // Disable this step. Step will be skipped
+         StepDelay_05 : Time;   // Delay after transition conditions are met
+         StepDisable_05 : Bool;   // Disable this step. Step will be skipped
+         StepDelay_06 : Time;   // Delay after transition conditions are met
+         StepDisable_06 : Bool;   // Disable this step. Step will be skipped
+         StepDelay_07 : Time;   // Delay after transition conditions are met
+         StepDisable_07 : Bool;   // Disable this step. Step will be skipped
+         StepDelay_08 : Time;   // Delay after transition conditions are met
+         StepDisable_08 : Bool;   // Disable this step. Step will be skipped
+         MaxStepTime : Time;   // Sequence will go to paused state when this time is exceeded
+         RunContinuously : Bool;   // Repeat cycle until stop command is given
+         StepCycle : Bool;   // Stop after each transition and continue with the start command
+      END_STRUCT;
+   END_VAR
+
+   VAR_OUTPUT 
+      outAction_01 { ExternalWritable := 'False'} : Bool;   // Action for step 1
+      outAction_02 { ExternalWritable := 'False'} : Bool;   // Action for step 2
+      outAction_03 { ExternalWritable := 'False'} : Bool;   // Action for step 3
+      outAction_04 { ExternalWritable := 'False'} : Bool;   // Action for step 4
+      outAction_05 { ExternalWritable := 'False'} : Bool;   // Action for step 5
+      outAction_06 { ExternalWritable := 'False'} : Bool;   // Action for step 6
+      outAction_07 { ExternalWritable := 'False'} : Bool;   // Action for step 7
+      outAction_08 { ExternalWritable := 'False'} : Bool;   // Action for step 8
+      sts : Struct
+         Idle : Bool;   // Waiting for start command
+         Running : Bool;   // Sequence in progress
+         Paused : Bool;   // Sequence pause due to transition time-out or pause command
+         Stopped : Bool;   // Sequence stopped due to missing start permissions
+      END_STRUCT;
+   END_VAR
+
+   VAR 
+      iStep : Int;   // Current step
+      tmrStepDelay {OriginalPartName := 'IEC_TIMER'; LibVersion := '1.0'} : TON_TIME;   // Step delay timer
+      bStepDelayEnable : Bool;   // Step delay timer enabled
+      bStepPermission : Bool;   // Step permission
+      tmrMaxStepTime {OriginalPartName := 'IEC_TIMER'; LibVersion := '1.0'} : TON_TIME;   // Maximum step timer
+      bMaxStepTimeEnable : Bool;   // Maximum step timer enabled
+      tmrTotalTimer {OriginalPartName := 'IEC_TIMER'; LibVersion := '1.0'} : TON_TIME;
+      RE_CmdStart : Bool;   // Rising edge on start command
+      RE_CmdPause : Bool;   // Rising edge on pause command
+      RE_CmdStop : Bool;   // Rising edge on stop command
+      bStopping : Bool;
+   END_VAR
+
+
+BEGIN
+	//This function block is responsible for controlling a sequence state machine
+	
+	//Instances and variable initialization
+	REGION "Initialization"
+	    //Watchdog timer for duration of a step
+	    #tmrMaxStepTime(IN := #sts.Running,
+	                    PT := #param.MaxStepTime);
+	    
+	    //Total sequence timer
+	    #tmrTotalTimer(IN := #sts.Running OR #sts.Paused,
+	                   PT := T#24H);
+	    
+	    //Step delay timer
+	    #tmrStepDelay(IN := #bStepDelayEnable,
+	                  PT := #tmrStepDelay.PT);
+	END_REGION
+	
+	//Handling of external commands
+	REGION "Commands"
+	    //Start command
+	    IF #cmd.Start THEN
+	        IF #sts.Idle AND #inpRunPerms AND NOT #RE_CmdStart THEN
+	            #bStepPermission := TRUE;
+	            #RE_CmdStart := TRUE;
+	        END_IF;
+	        
+	        //If paused resume operation with start command
+	        IF #sts.Paused AND NOT #RE_CmdStart THEN
+	            #bStepPermission := TRUE;
+	            #RE_CmdStart := TRUE;
+	        END_IF;
+	    ELSE
+	        #RE_CmdStart := FALSE;
+	    END_IF;
+	    
+	    //Stop command
+	    IF #cmd.Stop OR (#sts.Running AND NOT #inpRunPerms) THEN //Go to stopping if run permissions are lost during running
+	        IF NOT #RE_CmdStop THEN
+	            #bStopping := TRUE;
+	            #RE_CmdStop := TRUE;
+	        END_IF;
+	    ELSE
+	        #RE_CmdStop := FALSE;
+	    END_IF;
+	    
+	    //Pause command
+	    //If watchdog timer expires go to paused mode
+	    IF #cmd.Pause OR #tmrMaxStepTime.Q THEN
+	        IF #sts.Running AND NOT #RE_CmdPause THEN
+	            #bStepPermission := FALSE;
+	            #RE_CmdPause := TRUE;
+	        END_IF;
+	    ELSE
+	        #RE_CmdPause := FALSE;
+	    END_IF;
+	    
+	    //If start permissions are missing go to stop
+	    IF NOT #inpStartPerms THEN
+	        #bStepPermission := FALSE;
+	        #bStopping := FALSE;
+	        #iStep := 0;
+	    END_IF;
+	END_REGION
+	
+	//States and transitions
+	REGION "States"
+	    CASE #iStep OF
+	        0:  //Stop
+	            IF #inpStartPerms THEN
+	                #iStep := 5;
+	            END_IF;
+	            
+	        5://Idle
+	            #bMaxStepTimeEnable := FALSE;
+	            IF #inpRunPerms AND #bStepPermission THEN
+	                #iStep := 10;
+	                #bStepDelayEnable := FALSE;
+	                IF #param.StepCycle THEN
+	                    #bStepPermission := FALSE;
+	                END_IF;
+	            END_IF;
+	            
+	        10:
+	            #bMaxStepTimeEnable := TRUE;
+	            IF #inpCond_01 AND #bStepPermission AND NOT #param.StepDisable_01 THEN //Running
+	                #bMaxStepTimeEnable := FALSE;
+	                #tmrStepDelay.PT := #param.StepDelay_01;
+	                #bStepDelayEnable := TRUE;
+	                IF #tmrStepDelay.Q THEN
+	                    #iStep := 20;
+	                    #bStepDelayEnable := FALSE;
+	                    IF #param.StepCycle THEN
+	                        #bStepPermission := FALSE;
+	                    END_IF;
+	                END_IF;
+	            ELSIF #param.StepDisable_01 THEN
+	                #bMaxStepTimeEnable := FALSE;
+	                #iStep := 20;
+	            END_IF;
+	            
+	        20:
+	            #bMaxStepTimeEnable := TRUE;
+	            IF #inpCond_02 AND #bStepPermission AND NOT #param.StepDisable_02 THEN
+	                #bMaxStepTimeEnable := FALSE;
+	                #tmrStepDelay.PT := #param.StepDelay_02;
+	                #bStepDelayEnable := TRUE;
+	                IF #tmrStepDelay.Q THEN
+	                    #iStep := 30;
+	                    #bStepDelayEnable := FALSE;
+	                    IF #param.StepCycle THEN
+	                        #bStepPermission := FALSE;
+	                    END_IF;
+	                END_IF;
+	            ELSIF #param.StepDisable_02 THEN
+	                #bMaxStepTimeEnable := FALSE;
+	                #iStep := 30;
+	            END_IF;
+	            
+	        30:
+	            #bMaxStepTimeEnable := TRUE;
+	            IF #inpCond_03 AND #bStepPermission AND NOT #param.StepDisable_03 THEN
+	                #bMaxStepTimeEnable := FALSE;
+	                #tmrStepDelay.PT := #param.StepDelay_03;
+	                #bStepDelayEnable := TRUE;
+	                IF #tmrStepDelay.Q THEN
+	                    #iStep := 40;
+	                    #bStepDelayEnable := FALSE;
+	                    IF #param.StepCycle THEN
+	                        #bStepPermission := FALSE;
+	                    END_IF;
+	                END_IF;
+	            ELSIF #param.StepDisable_03 THEN
+	                #bMaxStepTimeEnable := FALSE;
+	                #iStep := 40;
+	            END_IF;
+	            
+	        40:
+	            #bMaxStepTimeEnable := TRUE;
+	            IF #inpCond_04 AND #bStepPermission AND NOT #param.StepDisable_04 THEN
+	                #bMaxStepTimeEnable := FALSE;
+	                #tmrStepDelay.PT := #param.StepDelay_04;
+	                #bStepDelayEnable := TRUE;
+	                IF #tmrStepDelay.Q THEN
+	                    #iStep := 50;
+	                    #bStepDelayEnable := FALSE;
+	                    IF #param.StepCycle THEN
+	                        #bStepPermission := FALSE;
+	                    END_IF;
+	                END_IF;
+	            ELSIF #param.StepDisable_04 THEN
+	                #bMaxStepTimeEnable := FALSE;
+	                #iStep := 50;
+	            END_IF;
+	            
+	        50:
+	            #bMaxStepTimeEnable := TRUE;
+	            IF #inpCond_05 AND #bStepPermission AND NOT #param.StepDisable_05 THEN
+	                #bMaxStepTimeEnable := FALSE;
+	                #tmrStepDelay.PT := #param.StepDelay_05;
+	                #bStepDelayEnable := TRUE;
+	                IF #tmrStepDelay.Q THEN
+	                    #iStep := 60;
+	                    #bStepDelayEnable := FALSE;
+	                    IF #param.StepCycle THEN
+	                        #bStepPermission := FALSE;
+	                    END_IF;
+	                END_IF;
+	            ELSIF #param.StepDisable_05 THEN
+	                #bMaxStepTimeEnable := FALSE;
+	                #iStep := 60;
+	            END_IF;
+	            
+	        60:
+	            #bMaxStepTimeEnable := TRUE;
+	            IF #inpCond_06 AND #bStepPermission AND NOT #param.StepDisable_06 THEN
+	                #bMaxStepTimeEnable := FALSE;
+	                #tmrStepDelay.PT := #param.StepDelay_06;
+	                #bStepDelayEnable := TRUE;
+	                IF #tmrStepDelay.Q THEN
+	                    #iStep := 70;
+	                    #bStepDelayEnable := FALSE;
+	                    IF #param.StepCycle THEN
+	                        #bStepPermission := FALSE;
+	                    END_IF;
+	                END_IF;
+	            ELSIF #param.StepDisable_06 THEN
+	                #bMaxStepTimeEnable := FALSE;
+	                #iStep := 70;
+	            END_IF;
+	            
+	        70:
+	            #bMaxStepTimeEnable := TRUE;
+	            IF #inpCond_07 AND #bStepPermission AND NOT #param.StepDisable_07 THEN
+	                #bMaxStepTimeEnable := FALSE;
+	                #tmrStepDelay.PT := #param.StepDelay_07;
+	                #bStepDelayEnable := TRUE;
+	                IF #tmrStepDelay.Q THEN
+	                    #iStep := 80;
+	                    #bStepDelayEnable := FALSE;
+	                    IF #param.StepCycle THEN
+	                        #bStepPermission := FALSE;
+	                    END_IF;
+	                END_IF;
+	            ELSIF #param.StepDisable_07 THEN
+	                #bMaxStepTimeEnable := FALSE;
+	                #iStep := 80;
+	            END_IF;
+	            
+	        80:
+	            #bMaxStepTimeEnable := TRUE;
+	            IF #inpCond_08 AND #bStepPermission AND NOT #param.StepDisable_08 THEN
+	                #bMaxStepTimeEnable := FALSE;
+	                #tmrStepDelay.PT := #param.StepDelay_08;
+	                #bStepDelayEnable := TRUE;
+	                IF #tmrStepDelay.Q THEN
+	                    #iStep := 999;
+	                    #bStepDelayEnable := FALSE;
+	                END_IF;
+	            ELSIF #param.StepDisable_08 THEN
+	                #bMaxStepTimeEnable := FALSE;
+	                #iStep := 999;
+	            END_IF;
+	            
+	        999:
+	            IF (NOT #param.RunContinuously) OR (#param.RunContinuously AND #bStopping) THEN
+	                #bStepPermission := FALSE;
+	            END_IF;
+	            #bStepDelayEnable := FALSE;
+	            #bStopping := FALSE;
+	            #iStep := 0;
+	    END_CASE;
+	END_REGION
+	
+	//Reflection of internal status to interface
+	REGION "Status"
+	    //Update output actions according to step number 
+	    #outAction_01 := ((#iStep = 10) AND NOT #param.StepDisable_01);
+	    #outAction_02 := ((#iStep = 20) AND NOT #param.StepDisable_02);
+	    #outAction_03 := ((#iStep = 30) AND NOT #param.StepDisable_03);
+	    #outAction_04 := ((#iStep = 40) AND NOT #param.StepDisable_04);
+	    #outAction_05 := ((#iStep = 50) AND NOT #param.StepDisable_05);
+	    #outAction_06 := ((#iStep = 60) AND NOT #param.StepDisable_06);
+	    #outAction_07 := ((#iStep = 70) AND NOT #param.StepDisable_07);
+	    #outAction_08 := ((#iStep = 80) AND NOT #param.StepDisable_08);
+	    
+	    //Update status
+	    IF #iStep = 0 THEN
+	        #sts.Idle := FALSE;
+	        #sts.Running := FALSE;
+	        #sts.Paused := FALSE;
+	        #sts.Stopped := TRUE;
+	    ELSIF #iStep = 5 THEN
+	        #sts.Idle := TRUE;
+	        #sts.Running := FALSE;
+	        #sts.Paused := FALSE;
+	        #sts.Stopped := FALSE;
+	    ELSIF #iStep > 5 AND #bStepPermission THEN
+	        #sts.Idle := FALSE;
+	        #sts.Running := TRUE;
+	        #sts.Paused := FALSE;
+	        #sts.Stopped := FALSE;
+	    ELSIF #iStep > 5 AND NOT #bStepPermission THEN
+	        #sts.Idle := FALSE;
+	        #sts.Running := FALSE;
+	        #sts.Paused := TRUE;
+	        #sts.Stopped := FALSE;
+	    ELSE //Uninitialised
+	        #sts.Idle := FALSE;
+	        #sts.Running := FALSE;
+	        #sts.Paused := FALSE;
+	        #sts.Stopped := FALSE;
+	    END_IF;
+	    
+	END_REGION
+	
+	
+	
+	
+	
+	
+	
+END_FUNCTION_BLOCK
+
