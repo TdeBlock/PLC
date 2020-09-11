@@ -1,0 +1,87 @@
+﻿FUNCTION_BLOCK "fbPackML"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      cmd : Struct
+         Start : Bool;   // The start command will move the unit into theStarting state.
+         Hold : Bool;   // The Hold command changes the unit from the EXECUTE state to the HOLDING state
+         UnHold : Bool;   // The Unhold command releases the HOLD state and moves the unit to the UNHOLDING state and then back to EXECUTE state
+         Suspend : Bool;   // A Suspend command may come as the result of upstream or downstream problems outside the unit itself
+         UnSuspend : Bool;   // The Unsuspend command releases the unit/machine from SUSPENDED state and moves to the UNSUSPENDING state and finally to the EXECUTE state
+         StateCompleted : Bool;   // The State Completed (SC) is an internal unit action which moves the unit itself to the next state. The SC is activated when the appropriate unit conditions are reached
+         Stop : Bool;   // The Stop command will start the execution of logic which brings the unit to the STOPPING state and finally to the STOPPED state
+         Reset : Bool;   // Initiate on the unit that is ready for production and move the unit/machine into the IDLE state via the RESETTING state
+         Abort : Bool;   // Will change the unit to the Aborting state and to the transitional state ABORTING and the secure state ABORTED
+         Clear : Bool;   //  Proceed to a CLEARING state and then the STOPPED state
+      END_STRUCT;
+      param : Struct
+         placeholder : Bool;
+      END_STRUCT;
+   END_VAR
+
+   VAR_OUTPUT 
+      sts : Struct
+         Idle : Bool;   // Wait state: Unit ready awaiting start command
+         Starting : Bool;   // Acting state: Unit is starting up to go to Execute state
+         Execute : Bool;   // Acting state: Unit is producing
+         Holding : Bool;   // Acting state: Unit is stopping before going to held state
+         Held : Bool;   // Wait state: Represents an error state which will generate an alarm or warning
+         Unholding : Bool;   // Acting state: Unit is starting up to go to Execute state
+         Suspending : Bool;   // Acting state: Unit is stopping before going to suspended state
+         Suspended : Bool;   // Wait state: The unit is not producing
+         UnSuspending : Bool;   // Acting state: Unit is starting up to go to Execute state
+         Completing : Bool;   // Acting state: The unit is stopping before going to complete state
+         Complete : Bool;   // Wait state: Unit process is complete awaiting reset command
+         Stopping : Bool;   // Acting state: Unit is stopping before going to stopped state
+         Stopped : Bool;   // Wait state: Unit is stopped awaiting reset command
+         Aborting : Bool;   // Acting state: Unit is stopping before going to aborted state
+         Aborted : Bool;   // Wait state: Unit is stopped awaiting clear command
+         Clearing : Bool;   // Acting state:  Clear faults that may have occurred when ABORTING and were presented in the ABORTED state
+         Resetting : Bool;   // Acting state: Unit is resetting before going to idle state
+      END_STRUCT;
+   END_VAR
+
+   VAR 
+      iState : Bool;
+   END_VAR
+
+   VAR CONSTANT 
+      iStateIdle : Int := 1;
+      iStateStarting : Int := 3;
+      iStateExecute : Int := 6;
+      iStateCompleting : Int := 16;
+      iStateComplete : Int := 17;
+      iStateResetting : Int := 15;
+      iStateHolding : Int := 10;
+      iStateHeld : Int := 11;
+      iStateUnholding : Int := 12;
+      iStateSuspending : Int := 13;
+      iStateSuspended : Int := 5;
+      iStateUnsuspending : Int := 14;
+      iStateStopping : Int := 7;
+      iStateStopped : Int := 2;
+      iStateAborting : Int := 8;
+      iStateAborted : Int := 9;
+      iStateClearing : Int := 18;
+   END_VAR
+
+
+BEGIN
+	// This function block is responsible for handling the PackML states
+	
+	//Handling of external commands
+	REGION "Commands"
+	    
+	END_REGION
+	
+	//States and transitions
+	REGION "States"
+	    
+	END_REGION
+	
+	//Reflection of status
+	REGION "Status"
+	    
+	END_REGION
+END_FUNCTION_BLOCK
+
