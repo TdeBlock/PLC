@@ -1,8 +1,8 @@
-﻿FUNCTION_BLOCK "fbPackML"
+﻿FUNCTION_BLOCK "fbPackML_V2"
 { S7_Optimized_Access := 'TRUE' }
 VERSION : 0.1
    VAR_INPUT 
-      cmd { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Struct
+      Command { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Struct
          Start { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // The start command will move the unit into theStarting state.
          Hold { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // The Hold command changes the unit from the EXECUTE state to the HOLDING state
          UnHold { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // The Unhold command releases the HOLD state and moves the unit to the UNHOLDING state and then back to EXECUTE state
@@ -15,7 +15,7 @@ VERSION : 0.1
          Abort { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Will change the unit to the Aborting state and to the transitional state ABORTING and the secure state ABORTED
          Clear { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   //  Proceed to a CLEARING state and then the STOPPED state
       END_STRUCT;
-      param { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Struct
+      Parameter { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Struct
          DisableStarting { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
          DisableHolding { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
          DisableUnHolding { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
@@ -27,11 +27,11 @@ VERSION : 0.1
          DisableStopping { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
          DisableResetting { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
       END_STRUCT;
-      inpInit : Bool;
+      Initialize : Bool;
    END_VAR
 
    VAR_OUTPUT 
-      sts { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Struct
+      Status { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Struct
          Idle { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Wait state: Unit ready awaiting start command
          Starting { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Acting state: Unit is starting up to go to Execute state
          Execute { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // Acting state: Unit is producing
@@ -53,255 +53,255 @@ VERSION : 0.1
    END_VAR
 
    VAR 
-      iState { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Int;   // Current state
+      CurrentState { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Int;   // Current state
       RE { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Struct   // Rising edges for commands
-         CmdStart { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
-         CmdHold { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
-         CmdUnHold { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
-         CmdSuspend { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
-         CmdUnSuspend { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
-         CmdExecuteCompleted { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
-         CmdStateCompleted { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
-         CmdStop { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
-         CmdReset { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
-         CmdAbort { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
-         CmdClear { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+         Start { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+         Hold { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+         UnHold { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+         Suspend { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+         UnSuspend { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+         ExecuteCompleted { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+         StateCompleted { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+         Stop { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+         Reset { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+         Abort { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+         Clear { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
       END_STRUCT;
    END_VAR
 
    VAR_TEMP 
-      iInitialState : Int;
+      InitialState : Int;
    END_VAR
 
    VAR CONSTANT 
-      iStateIdle : Int := 1;
-      iStateStarting : Int := 3;
-      iStateExecute : Int := 6;
-      iStateCompleting : Int := 16;
-      iStateComplete : Int := 17;
-      iStateResetting : Int := 15;
-      iStateHolding : Int := 10;
-      iStateHeld : Int := 11;
-      iStateUnholding : Int := 12;
-      iStateSuspending : Int := 13;
-      iStateSuspended : Int := 5;
-      iStateUnsuspending : Int := 14;
-      iStateStopping : Int := 7;
-      iStateStopped : Int := 2;
-      iStateAborting : Int := 8;
-      iStateAborted : Int := 9;
-      iStateClearing : Int := 18;
+      StateIdle : Int := 1;
+      StateStarting : Int := 3;
+      StateExecute : Int := 6;
+      StateCompleting : Int := 16;
+      StateComplete : Int := 17;
+      StateResetting : Int := 15;
+      StateHolding : Int := 10;
+      StateHeld : Int := 11;
+      StateUnholding : Int := 12;
+      StateSuspending : Int := 13;
+      StateSuspended : Int := 5;
+      StateUnsuspending : Int := 14;
+      StateStopping : Int := 7;
+      StateStopped : Int := 2;
+      StateAborting : Int := 8;
+      StateAborted : Int := 9;
+      StateClearing : Int := 18;
    END_VAR
 
 
 BEGIN
 	// This function block is responsible for handling the PackML states
-	//
+	// @Author: T. de Block
 	
 	//Instances and variable initialization
 	REGION "Initialization"
-	    IF #inpInit THEN
-	        #iInitialState := #iStateStopped;
-	        #iState := #iInitialState;
+	    IF #Initialize THEN
+	        #InitialState := #StateStopped;
+	        #CurrentState := #InitialState;
 	    END_IF;
 	END_REGION
 	
 	//Handling of external commands
 	REGION "Commands"
 	    //Start command
-	    IF #cmd.Start THEN
-	        IF NOT #RE.CmdStart THEN
-	            #RE.CmdStart := TRUE;
+	    IF #Command.Start THEN
+	        IF NOT #RE.Start THEN
+	            #RE.Start := TRUE;
 	        END_IF;
 	    ELSE
-	        #RE.CmdStart := FALSE;
+	        #RE.Start := FALSE;
 	    END_IF;
 	    
 	    //Hold command
-	    IF #cmd.Hold THEN
-	        IF NOT #RE.CmdHold THEN
-	            #RE.CmdHold := TRUE;
+	    IF #Command.Hold THEN
+	        IF NOT #RE.Hold THEN
+	            #RE.Hold := TRUE;
 	        END_IF;
 	    ELSE
-	        #RE.CmdHold := FALSE;
+	        #RE.Hold := FALSE;
 	    END_IF;
 	    
 	    //Unhold command
-	    IF #cmd.UnHold THEN
-	        IF NOT #RE.CmdUnHold THEN
-	            #RE.CmdUnHold := TRUE;
+	    IF #Command.UnHold THEN
+	        IF NOT #RE.UnHold THEN
+	            #RE.UnHold := TRUE;
 	        END_IF;
 	    ELSE
-	        #RE.CmdUnHold := FALSE;
+	        #RE.UnHold := FALSE;
 	    END_IF;
 	    
 	    //Suspend command
-	    IF #cmd.Suspend THEN
-	        IF NOT #RE.CmdSuspend THEN
-	            #RE.CmdSuspend := TRUE;
+	    IF #Command.Suspend THEN
+	        IF NOT #RE.Suspend THEN
+	            #RE.Suspend := TRUE;
 	        END_IF;
 	    ELSE
-	        #RE.CmdSuspend := FALSE;
+	        #RE.Suspend := FALSE;
 	    END_IF;
 	    
 	    //Unsuspend command
-	    IF #cmd.UnSuspend THEN
-	        IF NOT #RE.CmdUnSuspend THEN
-	            #RE.CmdUnSuspend := TRUE;
+	    IF #Command.UnSuspend THEN
+	        IF NOT #RE.UnSuspend THEN
+	            #RE.UnSuspend := TRUE;
 	        END_IF;
 	    ELSE
-	        #RE.CmdUnSuspend := FALSE;
+	        #RE.UnSuspend := FALSE;
 	    END_IF;
 	    
 	    //Execute complete command
-	    IF #cmd.ExecuteCompleted THEN
-	        IF NOT #RE.CmdExecuteCompleted THEN
-	            #RE.CmdExecuteCompleted := TRUE;
+	    IF #Command.ExecuteCompleted THEN
+	        IF NOT #RE.ExecuteCompleted THEN
+	            #RE.ExecuteCompleted := TRUE;
 	        END_IF;
 	    ELSE
-	        #RE.CmdExecuteCompleted := FALSE;
+	        #RE.ExecuteCompleted := FALSE;
 	    END_IF;
 	    
 	    //State complete command
-	    IF #cmd.StateCompleted THEN
-	        IF NOT #RE.CmdStateCompleted THEN
-	            #RE.CmdStateCompleted := TRUE;
+	    IF #Command.StateCompleted THEN
+	        IF NOT #RE.StateCompleted THEN
+	            #RE.StateCompleted := TRUE;
 	        END_IF;
 	    ELSE
-	        #RE.CmdStateCompleted := FALSE;
+	        #RE.StateCompleted := FALSE;
 	    END_IF;
 	    
 	    //Stop command
-	    IF #cmd.Stop THEN
-	        IF NOT #RE.CmdStop THEN
-	            #RE.CmdStop := TRUE;
-	            IF NOT (#sts.Aborted OR #sts.Aborting OR #sts.Clearing OR #sts.Stopped) THEN
-	                #iState := #iStateStopping;
+	    IF #Command.Stop THEN
+	        IF NOT #RE.Stop THEN
+	            #RE.Stop := TRUE;
+	            IF NOT (#Status.Aborted OR #Status.Aborting OR #Status.Clearing OR #Status.Stopped) THEN
+	                #CurrentState := #StateStopping;
 	            END_IF;
 	        END_IF;
 	    ELSE
-	        #RE.CmdStop := FALSE;
+	        #RE.Stop := FALSE;
 	    END_IF;
 	    
 	    //Reset command
-	    IF #cmd.Reset THEN
-	        IF NOT #RE.CmdReset THEN
-	            #RE.CmdReset := TRUE;
+	    IF #Command.Reset THEN
+	        IF NOT #RE.Reset THEN
+	            #RE.Reset := TRUE;
 	        END_IF;
 	    ELSE
-	        #RE.CmdReset := FALSE;
+	        #RE.Reset := FALSE;
 	    END_IF;
 	    
 	    //Abort command
-	    IF #cmd.Abort THEN
-	        IF NOT #RE.CmdAbort THEN
-	            #RE.CmdAbort := TRUE;
-	            #iState := #iStateAborting;
+	    IF #Command.Abort THEN
+	        IF NOT #RE.Abort THEN
+	            #RE.Abort := TRUE;
+	            #CurrentState := #StateAborting;
 	        END_IF;
 	    ELSE
-	        #RE.CmdAbort := FALSE;
+	        #RE.Abort := FALSE;
 	    END_IF;
 	    
 	    //Clear command
-	    IF #cmd.Clear THEN
-	        IF NOT #RE.CmdClear THEN
-	            #RE.CmdClear := TRUE;
+	    IF #Command.Clear THEN
+	        IF NOT #RE.Clear THEN
+	            #RE.Clear := TRUE;
 	        END_IF;
 	    ELSE
-	        #RE.CmdClear := FALSE;
+	        #RE.Clear := FALSE;
 	    END_IF;
 	END_REGION
 	
 	//States and transitions
 	REGION "States"
-	    CASE #iState OF
-	        #iStateClearing:    //Clearing state
-	            IF #RE.CmdStateCompleted OR #param.DisableClearing THEN
-	                #iState := #iStateStopped;
+	    CASE #CurrentState OF
+	        #StateClearing:    //Clearing state
+	            IF #RE.StateCompleted OR #Parameter.DisableClearing THEN
+	                #CurrentState := #StateStopped;
 	            END_IF;
 	            
-	        #iStateStopped:     //Stopped state
-	            IF #RE.CmdReset THEN
-	                #iState := #iStateResetting;
+	        #StateStopped:     //Stopped state
+	            IF #RE.Reset THEN
+	                #CurrentState := #StateResetting;
 	            END_IF;
 	            
-	        #iStateResetting:   //Resetting state
-	            IF #RE.CmdStateCompleted OR #param.DisableResetting THEN
-	                #iState := #iStateIdle;
+	        #StateResetting:   //Resetting state
+	            IF #RE.StateCompleted OR #Parameter.DisableResetting THEN
+	                #CurrentState := #StateIdle;
 	            END_IF;
 	            
-	        #iStateIdle:  // Idle state
-	            IF #RE.CmdStart THEN
-	                #iState := #iStateStarting;
+	        #StateIdle:  // Idle state
+	            IF #RE.Start THEN
+	                #CurrentState := #StateStarting;
 	            END_IF;
 	            
-	        #iStateStarting:  // Starting state
-	            IF #RE.CmdStateCompleted OR #param.DisableStarting THEN
-	                #iState := #iStateExecute;
+	        #StateStarting:  // Starting state
+	            IF #RE.StateCompleted OR #Parameter.DisableStarting THEN
+	                #CurrentState := #StateExecute;
 	            END_IF;
 	            
-	        #iStateExecute: //Execute state
-	            IF #RE.CmdHold THEN
-	                #iState := #iStateHolding;
-	            ELSIF #RE.CmdSuspend THEN
-	                #iState := #iStateSuspending;
-	            ELSIF #RE.CmdExecuteCompleted THEN
-	                #iState := #iStateCompleting;
+	        #StateExecute: //Execute state
+	            IF #RE.Hold THEN
+	                #CurrentState := #StateHolding;
+	            ELSIF #RE.Suspend THEN
+	                #CurrentState := #StateSuspending;
+	            ELSIF #RE.ExecuteCompleted THEN
+	                #CurrentState := #StateCompleting;
 	            END_IF;
 	            
-	        #iStateHolding: //Holding state
-	            IF #RE.CmdStateCompleted OR #param.DisableHolding THEN
-	                #iState := #iStateHeld;
+	        #StateHolding: //Holding state
+	            IF #RE.StateCompleted OR #Parameter.DisableHolding THEN
+	                #CurrentState := #StateHeld;
 	            END_IF;
 	            
-	        #iStateHeld:    //Held state
-	            IF #RE.CmdUnHold THEN
-	                #iState := #iStateUnholding;
+	        #StateHeld:    //Held state
+	            IF #RE.UnHold THEN
+	                #CurrentState := #StateUnholding;
 	            END_IF;
 	            
-	        #iStateUnholding:   //Unholding state
-	            IF #RE.CmdStateCompleted OR #param.DisableUnHolding THEN
-	                #iState := #iStateExecute;
+	        #StateUnholding:   //Unholding state
+	            IF #RE.StateCompleted OR #Parameter.DisableUnHolding THEN
+	                #CurrentState := #StateExecute;
 	            END_IF;
 	            
-	        #iStateSuspending:  //Suspending state
-	            IF #RE.CmdStateCompleted OR #param.DisableSuspending THEN
-	                #iState := #iStateSuspended;
+	        #StateSuspending:  //Suspending state
+	            IF #RE.StateCompleted OR #Parameter.DisableSuspending THEN
+	                #CurrentState := #StateSuspended;
 	            END_IF;
 	            
-	        #iStateSuspended:   //Suspended state
-	            IF #RE.CmdUnSuspend THEN
-	                #iState := #iStateUnsuspending;
+	        #StateSuspended:   //Suspended state
+	            IF #RE.UnSuspend THEN
+	                #CurrentState := #StateUnsuspending;
 	            END_IF;
 	            
-	        #iStateUnsuspending:    //Unsuspending state
-	            IF #RE.CmdStateCompleted OR #param.DisableUnSuspending THEN
-	                #iState := #iStateExecute;
+	        #StateUnsuspending:    //Unsuspending state
+	            IF #RE.StateCompleted OR #Parameter.DisableUnSuspending THEN
+	                #CurrentState := #StateExecute;
 	            END_IF;
 	            
-	        #iStateCompleting:  //Completing state
-	            IF #RE.CmdStateCompleted OR #param.DisableCompleting THEN
-	                #iState := #iStateComplete;
+	        #StateCompleting:  //Completing state
+	            IF #RE.StateCompleted OR #Parameter.DisableCompleting THEN
+	                #CurrentState := #StateComplete;
 	            END_IF;
 	            
-	        #iStateComplete:    //Completed state
-	            IF #RE.CmdReset THEN
-	                #iState := #iStateResetting;
+	        #StateComplete:    //Completed state
+	            IF #RE.Reset THEN
+	                #CurrentState := #StateResetting;
 	            END_IF;
 	            
-	            #iStateStopping:    //Stopping state
-	                IF #RE.CmdStateCompleted OR #param.DisableStopping THEN
-	                #iState := #iStateStopped;
+	            #StateStopping:    //Stopping state
+	                IF #RE.StateCompleted OR #Parameter.DisableStopping THEN
+	                #CurrentState := #StateStopped;
 	            END_IF;
 	            
-	        #iStateAborting:    //Aborting state
-	            IF #RE.CmdStateCompleted OR #param.DisableAborting THEN
-	                #iState := #iStateAborted;
+	        #StateAborting:    //Aborting state
+	            IF #RE.StateCompleted OR #Parameter.DisableAborting THEN
+	                #CurrentState := #StateAborted;
 	            END_IF;
 	            
-	        #iStateAborted:     //Aborted state
-	            IF #RE.CmdClear THEN
-	                #iState := #iStateClearing;
+	        #StateAborted:     //Aborted state
+	            IF #RE.Clear THEN
+	                #CurrentState := #StateClearing;
 	            END_IF;
 	    END_CASE;
 	    
@@ -309,23 +309,23 @@ BEGIN
 	
 	//Reflection of internal status to interface
 	REGION "Status"
-	    #sts.Aborted := (#iState = #iStateAborted);
-	    #sts.Aborting := (#iState = #iStateAborting);
-	    #sts.Clearing := (#iState = #iStateClearing);
-	    #sts.Complete := (#iState = #iStateComplete);
-	    #sts.Completing := (#iState = #iStateCompleting);
-	    #sts.Execute := (#iState = #iStateExecute);
-	    #sts.Held := (#iState = #iStateHeld);
-	    #sts.Holding := (#iState = #iStateHolding);
-	    #sts.Idle := (#iState = #iStateIdle);
-	    #sts.Resetting := (#iState = #iStateResetting);
-	    #sts.Starting := (#iState = #iStateStarting);
-	    #sts.Stopped := (#iState = #iStateStopped);
-	    #sts.Stopping := (#iState = #iStateStopping);
-	    #sts.Suspended := (#iState = #iStateSuspended);
-	    #sts.Suspending := (#iState = #iStateSuspending);
-	    #sts.Unholding := (#iState = #iStateUnholding);
-	    #sts.UnSuspending := (#iState = #iStateUnsuspending);
+	    #Status.Aborted := (#CurrentState = #StateAborted);
+	    #Status.Aborting := (#CurrentState = #StateAborting);
+	    #Status.Clearing := (#CurrentState = #StateClearing);
+	    #Status.Complete := (#CurrentState = #StateComplete);
+	    #Status.Completing := (#CurrentState = #StateCompleting);
+	    #Status.Execute := (#CurrentState = #StateExecute);
+	    #Status.Held := (#CurrentState = #StateHeld);
+	    #Status.Holding := (#CurrentState = #StateHolding);
+	    #Status.Idle := (#CurrentState = #StateIdle);
+	    #Status.Resetting := (#CurrentState = #StateResetting);
+	    #Status.Starting := (#CurrentState = #StateStarting);
+	    #Status.Stopped := (#CurrentState = #StateStopped);
+	    #Status.Stopping := (#CurrentState = #StateStopping);
+	    #Status.Suspended := (#CurrentState = #StateSuspended);
+	    #Status.Suspending := (#CurrentState = #StateSuspending);
+	    #Status.Unholding := (#CurrentState = #StateUnholding);
+	    #Status.UnSuspending := (#CurrentState = #StateUnsuspending);
 	END_REGION
 END_FUNCTION_BLOCK
 
