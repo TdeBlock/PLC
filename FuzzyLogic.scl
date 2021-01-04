@@ -1,0 +1,114 @@
+﻿FUNCTION_BLOCK "FuzzyLogic"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      InputSignal : Real;
+      Parameter : Struct
+         Setpoint : Real;
+         Hysteresis : Real;
+         Deviation : Real;   // Percentage
+      END_STRUCT;
+   END_VAR
+
+   VAR_OUTPUT 
+      out : Struct
+         VeryCold : Bool;
+         Cold : Bool;
+         Warm : Bool;
+         Hot : Bool;
+         VeryHot : Bool;
+      END_STRUCT;
+   END_VAR
+
+   VAR 
+      upperLimit : Real;
+      lowerLimit : Real;
+      state : Int;
+      minimumLimit : Real;
+      maximumLimit : Real;
+   END_VAR
+
+   VAR CONSTANT 
+      ERROR : Int;
+      VERY_COLD : Int := 1;
+      COLD : Int := 2;
+      WARM : Int := 3;
+      HOT : Int := 4;
+      VERY_HOT : Int := 5;
+   END_VAR
+
+
+BEGIN
+	//This function block uses fuzzy logic to determine five levels based on the configured settings:
+	//+ Hysteresis of the setpoint for upper and lower limit calculation;
+	//+ Deviation is the percentage the input signal may deviate from the upper and lower limits - if 0% COLD and HOT are not used.
+	//
+	//@author: Tom de Block
+	
+	REGION "Calculate limits"
+	    #upperLimit := #Parameter.Setpoint + #Parameter.Hysteresis;
+	    #lowerLimit := #Parameter.Setpoint - #Parameter.Hysteresis;
+	    #minimumLimit := #lowerLimit - ((#lowerLimit / 100) * #Parameter.Deviation);
+	    #maximumLimit := #upperLimit + ((#upperLimit / 100) * #Parameter.Deviation);
+	END_REGION
+	
+	REGION "Determine state"
+	    IF #InputSignal < #minimumLimit THEN
+	        #state := #VERY_COLD;
+	    ELSIF (#InputSignal >= #minimumLimit) AND (#InputSignal < #lowerLimit) THEN
+	        #state := #COLD;
+	    ELSIF (#InputSignal >= #lowerLimit) AND (#InputSignal < #upperLimit) THEN
+	        #state := #WARM;
+	    ELSIF (#InputSignal >= #upperLimit) AND (#InputSignal < #maximumLimit) THEN
+	        #state := #HOT;
+	    ELSIF #InputSignal >= #maximumLimit THEN
+	        #state := #VERY_HOT;
+	    ELSE
+	        #state := #ERROR;
+	    END_IF;
+	END_REGION
+	
+	REGION "Define actions"
+	    CASE #state OF
+	        #ERROR:
+	            #out.VeryCold := FALSE;
+	            #out.Cold := FALSE;
+	            #out.Warm := FALSE;
+	            #out.Hot := FALSE;
+	            #out.VeryHot := FALSE;
+	        #VERY_COLD:
+	            #out.VeryCold := TRUE;
+	            #out.Cold := FALSE;
+	            #out.Warm := FALSE;
+	            #out.Hot := FALSE;
+	            #out.VeryHot := FALSE;
+	        #COLD:
+	            #out.VeryCold := FALSE;
+	            #out.Cold := TRUE;
+	            #out.Warm := FALSE;
+	            #out.Hot := FALSE;
+	            #out.VeryHot := FALSE;
+	        #WARM:
+	            #out.VeryCold := FALSE;
+	            #out.Cold := FALSE;
+	            #out.Warm := TRUE;
+	            #out.Hot := FALSE;
+	            #out.VeryHot := FALSE;
+	        #HOT:
+	            #out.VeryCold := FALSE;
+	            #out.Cold := FALSE;
+	            #out.Warm := FALSE;
+	            #out.Hot := TRUE;
+	            #out.VeryHot := FALSE;
+	        #VERY_HOT:
+	            #out.VeryCold := FALSE;
+	            #out.Cold := FALSE;
+	            #out.Warm := FALSE;
+	            #out.Hot := FALSE;
+	            #out.VeryHot := TRUE;
+	    END_CASE;
+	END_REGION
+	
+	
+END_FUNCTION_BLOCK
+

@@ -1,0 +1,24 @@
+﻿FUNCTION_BLOCK "PulseTrain"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      offTime : Time;
+      onTime : Time;
+   END_VAR
+
+   VAR 
+      tmrOff {InstructionName := 'TON_TIME'; LibVersion := '1.0'} : TON_TIME;
+      tmrOn {InstructionName := 'TON_TIME'; LibVersion := '1.0'} : TON_TIME;
+   END_VAR
+
+
+BEGIN
+	#tmrOff(IN := TRUE AND NOT #tmrOn.Q,
+	        PT := #offTime);
+	
+	#tmrOn(IN := TRUE AND #tmrOff.Q,
+	       PT := #onTime);
+	
+	ENO := #tmrOff.Q;
+END_FUNCTION_BLOCK
+
