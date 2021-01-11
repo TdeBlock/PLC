@@ -1,0 +1,30 @@
+﻿FUNCTION "Scaling" : Real
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      RawValue : Int;
+      RawValueMin : Int;
+      RawValueMax : Int;   // 27648 for analog signals 4-20mA
+      ScaledValueMin : Real;
+      ScaledValueMax : Real;
+   END_VAR
+
+
+BEGIN
+	// This function takes a raw (analog) value and returns the scaled value calculated acording to the 
+	// parameters. In case of incorrect parameters the function returns -1.0.
+	// 
+	// @Author: Tom de Block
+	
+	IF (#RawValueMin < #RawValueMax) AND (#ScaledValueMin < #ScaledValueMax) THEN
+	    #Scaling := (INT_TO_REAL(#RawValue - #RawValueMin)) / (#RawValueMax - #RawValueMin) * (#ScaledValueMax - #ScaledValueMin) + #ScaledValueMin;
+	ELSE
+	    #Scaling := -1.0;
+	END_IF;
+	
+	
+	
+	
+	
+END_FUNCTION
+
