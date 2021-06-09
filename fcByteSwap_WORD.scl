@@ -1,0 +1,25 @@
+﻿FUNCTION "fcByteSwap_WORD" : Word
+{ S7_Optimized_Access := 'FALSE' }
+VERSION : 0.1
+   VAR_INPUT 
+      input : Word;
+   END_VAR
+
+   VAR_TEMP 
+      inputWord : Word;
+      inputWordStat AT inputWord : Array[0..1] of Byte;
+      temp : Byte;
+      wordtest : Word;
+   END_VAR
+
+
+BEGIN
+	#inputWord := #input;
+	#temp := #inputWordStat[0];
+	#inputWordStat[0] := #inputWordStat[1];
+	#inputWordStat[1] := #temp;
+	
+	#wordtest := #inputWord;
+	#fcByteSwap_WORD := #wordtest;
+END_FUNCTION
+

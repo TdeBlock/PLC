@@ -1,0 +1,49 @@
+﻿FUNCTION_BLOCK "ActuatorSelection"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      iInput : Int;
+      iPosition_Sel : Array[1..#cInputArrayLength] of Int;
+   END_VAR
+
+   VAR_IN_OUT 
+      oActuator : Array[*] of Bool;
+   END_VAR
+
+   VAR DB_SPECIFIC
+      stat : Word;
+      statInputs { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} AT stat : Array[1..#cInputArrayLength] of Bool;
+   END_VAR
+
+   VAR_TEMP 
+      i : Int;
+      arrayUpperBound : DInt;
+      arrayLowerBound : DInt;
+   END_VAR
+
+   VAR CONSTANT 
+      cInputArrayLength : Int := 16;
+   END_VAR
+
+
+BEGIN
+	#arrayUpperBound := UPPER_BOUND(ARR := #oActuator, DIM := 1);
+	#arrayLowerBound := LOWER_BOUND(ARR := #oActuator, DIM := 1);
+	
+	//#stat := #iInput;
+	#stat := "fcByteSwap_WORD"(input := INT_TO_WORD(#iInput));
+	
+	FOR #i := 1 TO #cInputArrayLength DO
+	    IF #statInputs[#i] THEN
+	        IF (#iPosition_Sel[#i] <= #arrayUpperBound) AND (#iPosition_Sel[#i] >= #arrayLowerBound) THEN
+	            #oActuator[#iPosition_Sel[#i]] := TRUE;
+	        END_IF;
+	    ELSE
+	        IF (#iPosition_Sel[#i] <= #arrayUpperBound) AND (#iPosition_Sel[#i] >= #arrayLowerBound) THEN
+	            #oActuator[#iPosition_Sel[#i]] := FALSE;
+	        END_IF;
+	    END_IF;
+	END_FOR;
+	
+END_FUNCTION_BLOCK
+
