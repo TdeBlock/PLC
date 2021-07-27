@@ -1,0 +1,36 @@
+﻿FUNCTION "fcBoolArray_OR" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      iBoolArray_1 : Array[*] of Bool;
+      iBoolArray_2 : Array[*] of Bool;
+      oBoolArray : Array[*] of Bool;
+   END_VAR
+
+   VAR_TEMP 
+      arrayUpperBound : DInt;
+      arrayLowerBound : DInt;
+      i : Int;
+   END_VAR
+
+
+BEGIN
+	(*This functions takes two boolean arrays of variable length and performs an OR operation on all elements.
+	  Then returns the result in a output array of variable length.
+	  
+	  Length check is performed on the output array, so take care that both input arrays are of the same length as the output array.
+	  
+	  @Author: Tom de Block
+	  *)
+	
+	#arrayUpperBound := UPPER_BOUND(ARR := #oBoolArray, DIM := 1);
+	#arrayLowerBound := LOWER_BOUND(ARR := #oBoolArray, DIM := 1);
+	
+	FOR #i := #arrayLowerBound TO #arrayUpperBound DO
+	    #oBoolArray[#i] := #iBoolArray_1[#i] OR #iBoolArray_2[#i];
+	END_FOR;
+	
+	
+	
+END_FUNCTION
+
