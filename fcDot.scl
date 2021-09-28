@@ -1,0 +1,31 @@
+﻿FUNCTION "fcDot" : Real
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      InputArrayX : Array[*] of Real;
+      InputArrayY : Array[*] of Real;
+   END_VAR
+
+   VAR_TEMP 
+      index : Int;
+      arrayUpperBound : DInt;
+      arrayLowerBound : DInt;
+      sum : Real;
+   END_VAR
+
+
+BEGIN
+	// This functions takes two REAL arrays of any length and returns the dot product of all the values in this array.
+	// 
+	// @author: Tom de Block
+	
+	#arrayUpperBound := UPPER_BOUND(ARR := #InputArrayX, DIM := 1);
+	#arrayLowerBound := LOWER_BOUND(ARR := #InputArrayX, DIM := 1);
+	
+	FOR #index := #arrayLowerBound TO #arrayUpperBound DO
+	    #sum := #sum + (#InputArrayX[#index] * #InputArrayY[#index]);
+	END_FOR;
+	
+	#fcDot := #sum;
+END_FUNCTION
+

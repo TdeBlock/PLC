@@ -1,0 +1,43 @@
+﻿FUNCTION "fcAverage" : Real
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      inputArray : Array[*] of Real;
+   END_VAR
+
+   VAR_TEMP 
+      index : Int;
+      sum : Real;
+      arrayUpperBound : DInt;
+      arrayLowerBound : DInt;
+      average : Real;
+   END_VAR
+
+
+BEGIN
+	// This functions takes a REAL array of any length and returns the average of all the values in this array.
+	// 
+	// @author: Tom de Block
+	#arrayUpperBound := UPPER_BOUND(ARR := #inputArray, DIM := 1);
+	#arrayLowerBound := LOWER_BOUND(ARR := #inputArray, DIM := 1);
+	
+	FOR #index := #arrayLowerBound TO #arrayUpperBound DO
+	    #sum := #sum + #inputArray[#index];
+	END_FOR;
+	
+	#fcAverage := #sum / DINT_TO_REAL(IN := #arrayUpperBound);
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+END_FUNCTION
+
