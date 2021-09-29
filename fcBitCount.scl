@@ -1,0 +1,29 @@
+﻿FUNCTION "fcBitCount" : Int
+{ S7_Optimized_Access := 'FALSE' }
+VERSION : 0.1
+   VAR_INPUT 
+      iDword : DWord;   // Input DWORD
+   END_VAR
+
+   VAR_TEMP 
+      temp : DWord;   // temp DWORD
+      attemp AT temp : Array[0..31] of Bool;   // conversion array for bits
+   END_VAR
+
+
+BEGIN
+	(*
+	Count the number of bits in the input DWORD with status 'TRUE' and returns this number as an INT.
+	*)
+	
+	#fcBitCount := 0;
+	#temp := #iDword;
+	
+	WHILE DWORD_TO_DINT(#temp) <> 0 DO
+	    IF #attemp[24] THEN
+	        #fcBitCount := #fcBitCount + 1;
+	    END_IF;
+	    #temp := SHR(IN := #temp, N := 1);
+	END_WHILE;
+END_FUNCTION
+
