@@ -1,0 +1,42 @@
+﻿FUNCTION_BLOCK "fbBubbleSort"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      InputArray : Array[*] of Real;
+   END_VAR
+
+   VAR 
+      index : Int;
+      value : Int;
+      largerValue : Real;
+   END_VAR
+
+   VAR_TEMP 
+      arrayUpperBound : DInt;
+      arrayLowerBound : DInt;
+   END_VAR
+
+
+BEGIN
+	// Bubble sort is considered the simplest sorting algorithm. It goes through an entire array and compares each neighboring number.
+	// It then swaps the numbers and keeps doing this until the list is in ascending order
+	// 
+	// @author: Tom de Block
+	
+	#arrayUpperBound := UPPER_BOUND(ARR := #InputArray, DIM := 1);
+	#arrayLowerBound := LOWER_BOUND(ARR := #InputArray, DIM := 1);
+	
+	FOR #index := #arrayLowerBound TO #arrayUpperBound DO
+	    FOR #value := (#arrayLowerBound + 1) TO #arrayUpperBound DO
+	        IF #InputArray[#value - 1] > #InputArray[#value] THEN
+	            #largerValue := #InputArray[#value - 1];
+	                
+	            //Swap larger value for smaller value
+	            #InputArray[#value - 1] := #InputArray[#value];
+	            #InputArray[#value] := #largerValue;
+	        END_IF;
+	    END_FOR;
+	END_FOR;
+	
+END_FUNCTION_BLOCK
+
