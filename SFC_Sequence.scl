@@ -1,0 +1,106 @@
+﻿FUNCTION_BLOCK "SFC_Sequence"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      iSequence : Int;   // Selected sequence
+      iStart : Bool;   // Command: Start sequence
+      iBallschemeDone : Bool;   // Signal current ballscheme complete
+      iAbort : Bool;   // Command: Abort running sequence
+   END_VAR
+
+   VAR_OUTPUT 
+      oActive : Bool;   // Sequence is currently running
+      oDn : Bool;   // Current sequence is completed
+      oSequenceTime : Time;   // Elapsed time of the current sequence
+   END_VAR
+
+   VAR_IN_OUT 
+      iSequences : Array[*] of "UDT_Sequence";   // Configured sequences
+      oProcessNumber : Int;   // Process number of ballscheme
+   END_VAR
+
+   VAR 
+      Timers : Struct   // Timers collection
+         SequenceTimer {InstructionName := 'TON_TIME'; LibVersion := '1.0'; S7_SetPoint := 'False'} : TON_TIME;
+      END_STRUCT;
+      RE_CmdStart {InstructionName := 'R_TRIG'; LibVersion := '1.0'; S7_SetPoint := 'False'} : R_TRIG;   // Rising edge trigger
+      RE_BallschemeDone {InstructionName := 'R_TRIG'; LibVersion := '1.0'} : R_TRIG;
+      RE_CmdAbort {InstructionName := 'R_TRIG'; LibVersion := '1.0'; S7_SetPoint := 'False'} : R_TRIG;   // Rising edge trigger
+      ballschemePointer { S7_SetPoint := 'True'} : DInt := 0;
+      sequencePointer : DInt;
+   END_VAR
+
+   VAR_TEMP 
+      arrayUpperBound : DInt;   // Upper limit of array
+      arrayLowerBound : DInt;   // Lower limit of array
+   END_VAR
+
+
+BEGIN
+	REGION Initialize variables
+	    #Timers.SequenceTimer(IN:=(#sequencePointer > 0) AND (#ballschemePointer > 0) AND NOT #iStart,
+	                      PT:=T#24D,
+	                      ET=>#oSequenceTime);
+	
+	//Calculatre array bounds
+	#arrayUpperBound := UPPER_BOUND(ARR := #iSequences, DIM := 1);
+	#arrayLowerBound := LOWER_BOUND(ARR := #iSequences, DIM := 1);
+	
+	END_REGION
+	
+	REGION Start
+	    #RE_CmdStart(CLK := #iStart,
+	               Q => #RE_CmdStart.Q);
+	    
+	  IF #RE_CmdStart.Q THEN
+	        IF #iSequence >= #arrayLowerBound THEN
+	            #sequencePointer := #iSequence;
+	            #ballschemePointer := 1;
+	        END_IF;
+	    END_IF;
+	END_REGION
+	
+	REGION Ballscheme done
+	    #RE_BallschemeDone(CLK := #iBallschemeDone,
+	                       Q => #RE_BallschemeDone.Q);
+	    
+	    IF #RE_BallschemeDone.Q THEN
+	        #ballschemePointer := #ballschemePointer + 1;
+	    END_IF;
+	END_REGION
+	
+	REGION Abort
+	    #RE_CmdAbort(CLK := #iAbort,
+	               Q => #RE_CmdAbort.Q);
+	    
+	    IF #RE_CmdAbort.Q THEN
+	        #sequencePointer := #arrayLowerBound;
+	        #ballschemePointer := 0;
+	    END_IF;
+	END_REGION
+	
+	REGION Set process number
+	    IF (#sequencePointer > 0) AND (#ballschemePointer > 0) THEN
+	        #oProcessNumber := #iSequences[#sequencePointer].Ballscheme[#ballschemePointer];
+	    ELSE
+	        #oProcessNumber := 0;
+	    END_IF;
+	END_REGION
+	
+	REGION Status
+	    IF (#sequencePointer > 0) AND (#ballschemePointer > 0) THEN
+	        #oDn := (#iSequences[#sequencePointer].Ballscheme[#ballschemePointer] = 0);
+	    ELSE
+	        #oDn := FALSE;
+	    END_IF;
+	    
+	    IF (#sequencePointer > 0) AND (#ballschemePointer > 0) THEN
+	        #oActive := (#iSequences[#sequencePointer].Ballscheme[#ballschemePointer] <> 0);
+	    ELSE
+	        #oActive := FALSE;
+	    END_IF;
+	END_REGION
+	
+	
+END_FUNCTION_BLOCK
+

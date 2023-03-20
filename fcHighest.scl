@@ -1,0 +1,32 @@
+﻿FUNCTION "fcHighest" : Real
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_IN_OUT 
+      inputArray : Array[*] of Real;
+   END_VAR
+
+   VAR_TEMP 
+      index : Int;
+      highest : Real;
+      arrayUpperBound : DInt;
+      arrayLowerBound : DInt;
+   END_VAR
+
+
+BEGIN
+	// This function takes a REAL array of any length and returns the highest value
+	// 
+	// @author: Tom de Block
+	// 
+	#arrayUpperBound := UPPER_BOUND(ARR := #inputArray, DIM := 1);
+	#arrayLowerBound := LOWER_BOUND(ARR := #inputArray, DIM := 1);
+	
+	FOR #index := #arrayLowerBound TO #arrayUpperBound DO
+	    IF #inputArray[#index] > #highest THEN
+	        #highest := #inputArray[#index];
+	    END_IF;
+	END_FOR;
+	
+	#fcHighest := #highest;
+END_FUNCTION
+
