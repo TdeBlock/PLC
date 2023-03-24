@@ -1,0 +1,31 @@
+﻿FUNCTION "fcDeviation" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      iSettings : Struct
+         Setpoint : Real;   // Setpoint to be checked
+         Deviation : Real;   // Maximum deviation in %
+      END_STRUCT;
+      iAnValue : Real;   // Measured value to be checked
+   END_VAR
+
+   VAR_OUTPUT 
+      oOk : Bool;   // Measured value within limits
+   END_VAR
+
+   VAR_TEMP 
+      lowLimit : Real;   // Lower limit of measured signal
+      highLimit : Real;   // Upper limit of measured signal
+      result : Bool;
+   END_VAR
+
+
+BEGIN
+	#lowLimit := #iSettings.Setpoint - (#iSettings.Setpoint * (#iSettings.Deviation / 100));
+	#highLimit := #iSettings.Setpoint + (#iSettings.Setpoint * (#iSettings.Deviation / 100));
+	
+	#result := (#iAnValue > #lowLimit) AND (#iAnValue <= #highLimit);
+	
+	#oOk := #result;
+END_FUNCTION
+
